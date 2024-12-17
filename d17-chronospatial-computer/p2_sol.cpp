@@ -15,7 +15,7 @@ namespace {
 using input::Input;
 using input::read_input;
 
-uint8_t eval_b(std::span<const uint8_t> candidate_a, int start_idx) {
+uint8_t eval_b(uint64_t a) {
   /*
   Program: 2,4,1,3,7,5,0,3,4,1,1,5,5,5,3,0
   2,4, B = A & 0b111
@@ -26,13 +26,9 @@ uint8_t eval_b(std::span<const uint8_t> candidate_a, int start_idx) {
   0,3, A = A >> 3
   3,0 jnz 0
   */
-  uint64_t a = 0;
-  const int sz = candidate_a.size();
-  for (int i = sz - 1; i >= start_idx; --i) {
-    a <<= 3;
-    a |= candidate_a[i];
-  }
 
+  // after some manual assembly reordering, a is only used in 3bit chunks and we
+  // only care about b for the output
   uint64_t b = a % 8;
   b ^= 3;
   b ^= (a >> b);
@@ -42,32 +38,25 @@ uint8_t eval_b(std::span<const uint8_t> candidate_a, int start_idx) {
 
 std::optional<uint64_t> result;
 
-void brute_force(std::span<uint8_t> candidate_a,
-                 std::span<const uint8_t> target, int fill_idx) {
-  if (fill_idx < 0) {
-    uint64_t candidate = 0;
-    const int sz = candidate_a.size();
-    for (int i = sz - 1; i >= 0; --i) {
-      candidate <<= 3;
-      candidate |= candidate_a[i];
-    }
+// evaluate and check the output from backwards
+void brute_force(uint64_t candidate_a, std::span<const uint8_t> target,
+                 int target_idx) {
+  if (target_idx < 0) {
     result = std::min(result.value_or(std::numeric_limits<uint64_t>::max()),
-                      candidate);
+                      candidate_a);
     return;
   }
 
-  for (int i = 0; i < 8; ++i) {
-    candidate_a[fill_idx] = i;
-    if (eval_b(candidate_a, fill_idx) == target[fill_idx])
-      brute_force(candidate_a, target, fill_idx - 1);
+  for (uint8_t i = 0; i < 8; ++i) {
+    uint64_t new_a = (candidate_a << 3) | i;
+    if (eval_b(new_a) == target[target_idx])
+      brute_force(new_a, target, target_idx - 1);
   }
 }
 
-uint64_t solve(const Input& input) {
-  const int out_len = input.bytecode.size();
-  std::vector<uint8_t> candidate_buf(out_len, 0);
+uint64_t solve(const Input& /*input*/) {
   constexpr uint8_t target[] = {2, 4, 1, 3, 7, 5, 0, 3, 4, 1, 1, 5, 5, 5, 3, 0};
-  brute_force(candidate_buf, target, out_len - 1);
+  brute_force(0, target, std::size(target) - 1);
   assert(result.has_value());
   return *result;
 }
