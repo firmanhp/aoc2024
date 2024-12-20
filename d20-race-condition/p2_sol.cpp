@@ -86,11 +86,11 @@ int solve(Vector2D<char>& grid) {
         end = std::make_pair(i, j);
     }
 
-  std::map<int, int> cheat_counts;
   const Vector2D<int> from_start = bfs_sssp(grid, start);
   const Vector2D<int> to_end = bfs_sssp(grid, end);
   const int cur_sp = from_start[end];
 
+  int ans = 0;
   for (int i = 0; i < rows; ++i)
     for (int j = 0; j < cols; ++j)
       // prune search space
@@ -112,16 +112,9 @@ int solve(Vector2D<char>& grid) {
           if (sp > cur_sp)
             continue;
           const int saving = cur_sp - sp;
-          ++cheat_counts[saving];
+          if (saving >= GOOD_CHEAT_THRESHOLD_PS)
+            ++ans;
         }
-
-  int ans = 0;
-  for (const auto& [saving, count] : cheat_counts) {
-    if (saving < GOOD_CHEAT_THRESHOLD_PS)
-      continue;
-    ans += count;
-    std::cout << "Saving: " << saving << " - " << count << '\n';
-  }
 
   return ans;
 }
