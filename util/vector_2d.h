@@ -27,6 +27,14 @@ public:
     return container.data() + (row * col_);
   }
 
+  const T& operator[](std::pair<int, int> pos) const {
+    return (*this)[pos.first][pos.second];
+  }
+
+  T& operator[](std::pair<int, int> pos) {
+    return (*this)[pos.first][pos.second];
+  }
+
   int height() const { return row_; }
   int width() const { return col_; }
 
@@ -49,6 +57,12 @@ void print(const Vector2D<char>& grid) {
     std::cout << '\n';
   }
   std::cout << '\n';
+}
+
+inline bool valid_spot(const Vector2D<char>& grid, std::pair<int, int> pos) {
+  const int rows = grid.height(), cols = grid.width();
+  return pos.first >= 0 && pos.first < rows && pos.second >= 0 &&
+         pos.second < cols;
 }
 
 } // namespace util
