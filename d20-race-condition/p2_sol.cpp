@@ -46,12 +46,6 @@ int manhattan_dist(pii from, pii to) {
   return std::abs(from.first - to.first) + std::abs(from.second - to.second);
 }
 
-struct PQEntry {
-  int cost;
-  pii pos;
-  inline int operator<=>(const PQEntry& o) const { return cost - o.cost; }
-};
-
 Vector2D<int> bfs_sssp(const Vector2D<char>& grid, pii from) {
   const int rows = grid.height(), cols = grid.width();
   Vector2D<int> dist(rows, cols);
