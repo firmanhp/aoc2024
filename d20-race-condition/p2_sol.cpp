@@ -93,8 +93,11 @@ int solve(Vector2D<char>& grid) {
 
   for (int i = 0; i < rows; ++i)
     for (int j = 0; j < cols; ++j)
-      for (int i2 = 0; i2 < rows; ++i2)
-        for (int j2 = 0; j2 < cols; ++j2) {
+      // prune search space
+      for (int i2 = std::max(0, i - MAX_CHEAT_PS - 1);
+           i2 < std::min(rows, i + MAX_CHEAT_PS + 1); ++i2)
+        for (int j2 = std::max(0, j - MAX_CHEAT_PS - 1);
+             j2 < std::min(cols, j + MAX_CHEAT_PS + 1); ++j2) {
           // std::cout << rows << " " << cols << '\n';
           // std::cout << i << " " << j << " " << i2 << " " << j2 << '\n';
           const pii pos1 = std::make_pair(i, j);
