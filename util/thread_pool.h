@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <condition_variable>
 #include <functional>
 
@@ -25,7 +26,9 @@ public:
   void wait_all() {
     std::unique_lock<std::mutex> lock(pending_mtx_);
     // this may be not the proper usage but hey it works
-    work_finish_signal_.wait(lock, [this] { return pending_queue_.empty(); });
+    work_finish_signal_.wait(lock, [this] {
+      return working_threads_ == 0 && pending_queue_.empty();
+    });
   }
 
   void add_job(std::function<void()> job) {
@@ -56,12 +59,15 @@ private:
       auto job = pop_job();
       if (!job.has_value())
         continue;
+      ++working_threads_;
       (*job)();
+      --working_threads_;
       work_finish_signal_.notify_all();
     }
   }
 
   bool is_running_;
+  std::atomic<int> working_threads_;
   std::queue<std::function<void()>> pending_queue_;
   mutable std::mutex pending_mtx_;
   std::vector<std::thread> runners_;
